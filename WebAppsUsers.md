@@ -41,7 +41,7 @@
   - **Sniper** - jeden útok, označen jeden parametr
   - **Batering ram** - stejná hodnota pro všechny parametry (např. admin/admin)
   - **Pitchfork** - kombinace více listů podle pozice (x1 a y1, x2 a y2, ...)
-  - **Cluster bomb** = kombinace slovníků (na každého uživatele z jednoho slovníku se použijí všechny hesla z druhého)
+  - **Cluster bomb** - kombinace slovníků (na každého uživatele z jednoho slovníku se použijí všechny hesla z druhého)
 
 ### Web Parameter Tampering (Hidden Fields)
 
@@ -97,16 +97,16 @@
 
 #### Session Prediction
 
-- Pokus o uhodnutí SID hrubou silou při krátkých SID, nebo malé množině použitých znaků
+- Pokus o **uhodnutí SID hrubou silou** při krátkých SID, nebo malé množině použitých znaků
 - Pro generování SID je použito algoritmů, které nejsou kryptograficky 100% náhodné a je tak možné odhadnout hodnoty cizích SID
-- Burp Suite: modul sequencer
+- Burp Suite: modul **Sequencer**
 
 #### Session Stealing / Hijacking
 
-- Pokud se SID předává v URL, pak může uniknout skrz **referer**
+- Pokud se SID předává v URL, pak může uniknout skrze **referer**
   - Uživatel klikne na odkaz a přejde na webovou stránku útočníka
   - Webová stránka načte externí obsah (např. obrázek) ze serveru útočníka
-- Pokud se SID předává v cookie, je k jeho zcizení potřeba využít například útoku XSS
+- Pokud se SID předává v cookie, je k jeho odcizení potřeba využít například útok XSS
 - Úniku dat skrz referrer lze zabránit HTTP Response hlavičkou **Referrer-policy**
   - Referrer-Policy: no-referrer
   - Referrer-Policy: no-referrer-when-downgrade
@@ -139,6 +139,7 @@
 #### Session Puzzling
 
 - Pokud se stejně pojmenovaná session proměnná používá na různých místech aplikace k různým účelům
+- Session je potom možné použít na jiném místě a vyhnout se tak případné autentizaci
 
 #### Cross-Subdomain Cooking / Cross-Site Cooking
 
@@ -160,7 +161,7 @@
 - Nutnost šifrovat komunikaci (HTTPS)
 - SSL Strip
 - Příznaky u session cookie: HttpOnly, Secure
-- HTTP Response Hlavičky
+- HTTP Response Headers
   - Strict-Transport-Security (HSTS)
   - Public-Key-Pins (HPKP)
 
@@ -205,7 +206,7 @@
 - **Možnosti zneužití uživatele**
   - Nalákání uživatele ke kliknutí na připravený odkaz
   - Maskování odkazu přesměrováním
-  - Využití odkazů na externí zdroje img, iframe, ...)
+  - Využití odkazů na externí zdroje (img, iframe, ...)
   - Použití AJAX
 
 ## Útoky metodou POST
@@ -253,7 +254,7 @@
 
 - **Obrana na straně uživatele**
   - Prakticky neexistuje
-  - Zabránit browseru v načítání externích zdrojů a odesílání dat z rámů (IFRAME)
+  - Zabránit browseru v načítání externích zdrojů a odesílání dat z rámů (iframe)
 - **Obrana na straně aplikace**
   - Při každé akci vyžadovat heslo
     - Používá se pouze při změně hesla a kritických operacích
@@ -349,7 +350,7 @@
 # Path Relative StyleSheet Import (PRSSI)
 
 - Pokud se styly načítají z relativního umístění
-- Pokud server ignoruje přidaná lomítka na konci url
+- Pokud server ignoruje přidaná lomítka na konci URL
 - Pokud můžeme do obsahu stránky vložit text obsahující css kód (perzistentně, reflektovaně)
 - Možnost injekce vlastních stylů
   - Clickjacking bez použití rámů
@@ -359,7 +360,7 @@
 # Cross-Domain data Hijacking
 
 - Referrer hijacking
-- Javascript hijacking
+- JavaScript hijacking
 - Cross-Site Callbacks
 - CORS misconfiguration
 - Cached data hijacking
@@ -447,3 +448,104 @@
   - Stránky vkládající do HTML obsah URL
   - Chybové stránky (404)
   - Redirekty
+
+### DOM-based XSS
+
+- Uživatelská data jsou přečtena a vložena do obsahu pomocí JS na straně klienta
+- Někdy je nutné použít `<iframe src='javascript:…'>` namísto `<script>`
+
+### Self-XSS
+
+- Kde není skutečná XSS zranitelnost v aplikaci, přichází na řadu sociotechnika
+- Uživatel je nabádán k otevření konzole (CTRL+STHIFT+K) a vložení kódu JavaScriptu
+
+### Další možnosti injekce
+
+- Bookmarklety javascript: a data:
+- Redirect
+- HTTP Response Splitting
+- Flash
+- Cross-Site Flashing
+
+## Možné cíle útoku XSS
+
+- Přesměrování uživatelů na jiné webové stránky
+- Defacement webové stránky (DoS, Phishing)
+- Změna atributu action u přihlašovacích formulářů
+- Automatické odesílání CSRF požadavků
+- Krádež cookies – Session stealing
+- Backdoor s obousměrnou komunikací (XSS proxy)
+- Mnoho dalších variant útoku
+
+## Obrana před XSS
+
+- Cookie a příznak httpOnly
+- Obrana před XSS na straně klienta
+- Obrana před XSS na straně webové aplikace
+
+### Cookie a příznak httpOnly
+
+- Cookies chráněná tímto příznakem není možné číst a zapisovat pomocí JavaScriptu
+- Příznak httpOnly má širokou podporu v prohlížečích
+- Na neprůstřelnost příznaku httpOnly se bohužel není možné plně spolehnout
+
+### Obrana před XSS na straně klienta
+
+- Zakázání JavaScriptu v prohlížeči
+- XSS filtry ve webových prohlížečích (pouze proti Non-perzistentnímu typu XSS)
+- Doplněk prohlížeče NoScript
+  - Čtení odpovědi serveru pomocí `XMLHttpRequest` a `getAllResponseHeaders()`
+  - Exploity pro Flash a Javu
+  - Cross-Site Tracing
+  - Too long cookie value
+  - Reflected HTTP request headers
+
+### Obrana před XSS na straně webové aplikace
+
+- Ochranu implementovat vždy na výstupu
+- Nahrazení nebezpečných metaznaků HTML entitami: < `&lg;`, > `&gt;`, “ `&quot;`, ‘ `&#39;`, & `&amp;`
+- Nebezpečnost znaků záleží na kontextu, v jakém jsou použity
+  - `<p>Toto je tvůj vstup: <script>alert(1)</script></p>`
+  - `<input type='text' value='' onfocus='alert(1)'>`
+- V řetězcích JavaScriptu escapovat metaznaky `<script>var a =‘a\‘b‘;</script>`
+- Pozor na direktivy `javascript:` a `data:` v odkazech nebo při redirektu
+- Pokud chceme některé HTML tagy povolit, pak je nutné uživatelský vstup kontrolovat na základě bílých seznamů
+- HTTP Response hlavička **X-XSS-Protection**
+- implementace **Content Security Policy**
+
+# Content Security Policy
+
+- Politika implementovaná do webových prohlížečů
+- Nový přístup v boji proti XSS, Clickjackingu a dalším útokům
+- Mohou být zakázány veškeré skripty a načítání obsahu z externích zdrojů
+- Vývojáři musí určit, které zdroje jsou bezpečné, a ze kterých může být externí obsah načítán
+- Je možné určit, které stránky mohou načítat dokument do prvků `<frame>` a `</iframe>`
+- V případě širšího nasazení dokáže vymýtit XSS a Clickjacking
+
+## Direktivy CSP
+
+- default-src: definice defaultně povolených zdrojů (ve FF4 allow)
+- script-src: definice zdrojů pro scripty `<script>`
+- img-src: definice zdrojů pro obrázky `<img>`
+- media-src: definice zdrojů pro media` <video>`, `<audio>`
+- object-src: definice zdrojů pro objekty `<object>`, `<embed>`, `<applet>`
+- frame-src: definice zdrojů pro plovoucí rámy `<iframe>`
+- font-src: definice zdrojů pro fonty v CSS @font-face
+- xhr-src (connect-src): definice zdrojů pro XMLHttpRequest
+- style-src: definice zdrojů pro stylopisy `<link rel='stylesheet'>`
+- frame-ancestors: definice includu `<iframe>`, `<frame>` a `<object>`
+- report-uri: definice adres pro zasílání reportů
+- policy-uri: definice adresy s definicí CSP
+- options: modifikace některých základních restrikcí CSP
+
+## Reporty při pokusu o narušení
+
+- Definovány jako JSON objekt
+- Jsou odesílány metodou POST na URI definované v request-uri
+- Reporty mohou pomoci nalézt slabá místa
+- Direktivy reportu
+  - request: request line z HTTP požadavku
+  - request-headers: hlavičky HTTP požadavku
+  - blocked-uri: zablokované URI
+  - violated-directive: direktiva způsobující blokování
+  - original-policy: zdroj bezpečnostní politiky
