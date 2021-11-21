@@ -4,6 +4,6 @@ Kerberos je autentizační síťový protokol, který je určen k ověření ide
 
 Kerberos využívá symetrickou kryptografii. Centrálním bodem je řadič domény Key Distribution Center (KDC), který se skládá ze dvou logicky oddělených částí: Autentizační služby (AS) pro ověření klienta a služby pro udělování tiketů TGS (Ticket-Granting Service). KDC spravuje databázi tajných klíčů uživatelů, jejichž znalostí uživatelé prokazují svou identitu. Pro komunikaci mezi stranami vygeneruje KDC klíč relace, kterým zabezpečí vzájemnou komunikaci. Bezpečnost tohoto protokolu významně závisí na vzájemné synchronizaci času protistran a krátké životnosti tiketů. Jakmile tiket vyprší, je nutné ho obnovit stejným způsobem jako při první autentizaci.
 
-Rozcestník:
-- [Penetrační testy](kerberos.md)
+## Bezpečnost
+- [Penetrační testy](tests.md)
 - [Zranitelnosti](vulnerabilities.md)
