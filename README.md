@@ -1,3 +1,5 @@
-# Bezpečnost webových aplikací
+# Penetrační testování
 
-[Útoky proti uživatelům](WebAppsUsers.md)
+- [Kerberos](kerberos/)
+- [Útoky proti uživatelům](wwww/)
+- [Slovníky](wordlists/)
